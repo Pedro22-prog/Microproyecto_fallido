@@ -4,6 +4,7 @@ import Register from './Register';
 import Login from './Login';
 import Logout from './Logout';
 import ProtectedRoute from './ProtectedRoute';
+import Home from './Home'; // Assuming Home component exists
 
 const App = () => {
   return (

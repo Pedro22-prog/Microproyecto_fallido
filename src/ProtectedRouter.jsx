@@ -1,8 +1,7 @@
-// ProtectedRoute.js
-import React from 'react';
 import { Redirect, Route } from 'react-router-dom';
 import firebase from 'firebase/app';
 import 'firebase/auth';
+import PropTypes from 'prop-types';
 
 const ProtectedRoute = ({ component: Component, ...rest }) => {
   return (
@@ -16,6 +15,10 @@ const ProtectedRoute = ({ component: Component, ...rest }) => {
       }}
     />
   );
+};
+
+ProtectedRoute.propTypes = {
+  component: PropTypes.elementType.isRequired,
 };
 
 export default ProtectedRoute;
