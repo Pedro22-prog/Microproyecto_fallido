@@ -1,10 +1,21 @@
-import React from 'react'
-import { Header } from './components';
+import React from 'react';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import Register from './Register';
+import Login from './Login';
+import Logout from './Logout';
+import ProtectedRoute from './ProtectedRoute';
 
 const App = () => {
-  return <div className='w-screen h-auto flex flex-col'>
-    <Header />
-  </div>;
-}
+  return (
+    <BrowserRouter>
+      <Switch>
+        <Route path="/register" component={Register} />
+        <Route path="/login" component={Login} />
+        <Route path="/logout" component={Logout} />
+        <ProtectedRoute path="/" component={Home} />
+      </Switch>
+    </BrowserRouter>
+  );
+};
 
-export default App
+export default App;
