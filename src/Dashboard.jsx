@@ -1,11 +1,13 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useHistory } from 'react-router-dom';
 
 const Dashboard = () => {
   const { currentUser } = useAuth();
+  const history = useHistory();
 
   if (!currentUser) {
-    return <Redirect to="/login" />;
+    history.push('/login');
   }
 
   return (

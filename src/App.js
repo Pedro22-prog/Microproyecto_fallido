@@ -1,34 +1,19 @@
 import React from 'react';
-import { BrowserRouter as Router, Switch, Route, Link } from 'react-router-dom';
-import { AuthProvider } from './contexts/AuthContext';
-import AuthForm from './components/AuthForm';
-import Dashboard from './components/Dashboard';
+import { BrowserRouter, Route, Switch } from 'react-router-dom';
+import ProtectedRoute from './ProtectedRoute';
+import Dashboard from './Dashboard';
+import Login from './Login';
+import Register from './Register';
 
 const App = () => {
   return (
-    <Router>
-      <AuthProvider>
-        <nav>
-          <ul>
-            <li>
-              <Link to="/">Dashboard</Link>
-            </li>
-            <li>
-              <Link to="/auth">Auth</Link>
-            </li>
-          </ul>
-        </nav>
-
-        <Switch>
-          <Route path="/auth">
-            <AuthForm />
-          </Route>
-          <Route path="/">
-            <Dashboard />
-          </Route>
-        </Switch>
-      </AuthProvider>
-    </Router>
+    <BrowserRouter>
+      <Switch>
+        <Route path="/login" component={Login} />
+        <Route path="/register" component={Register} />
+        <ProtectedRoute path="/" component={Dashboard} />
+      </Switch>
+    </BrowserRouter>
   );
 };
 

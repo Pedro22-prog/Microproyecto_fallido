@@ -1,239 +1,135 @@
-import {EmailAuthCredential, EmailAuthProvider, createUserWithEmailAndPassword, fetchSignInMethodsForEmail, getAdditionalUserInfo, onAuthStateChanged, sendEmailVerification, signInAnonymously, signInWithCredential, signInWithEmailAndPassword, signInWithPopup, signOut, verifyBeforeUpdateEmail} from "firebase/auth";
-import {auth,googleProvider,facebookProvider} from "../firebase";
-import { addDoc, collection, setDoc, doc,getDoc } from "firebase/firestore";
+// firebase.js
+import { initializeApp } from "firebase/app";
+import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
+
+const app = initializeApp({
+  // Firebase configuration
+});
+
+const auth = getAuth(app);
+const db = getFirestore(app);
+const googleProvider = new GoogleAuthProvider();
+const facebookProvider = new FacebookAuthProvider();
+
+export { auth, googleProvider, facebookProvider, db };
+
+// auth.js
+import { auth } from "../firebase";
+
+export async function loginWithCredentials(email, password) {
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (error) {
+    throw new Error('Credenciales inválidas');
+  }
+}
+
+export async function cambiarContrasena(email) {
+  try {
+    await sendPasswordResetEmail(auth, email);
+  } catch (error) {
+    throw new Error('Error al enviar el correo de restablecimiento de contraseña.');
+  }
+}
+
+// db.js
 import { db } from '../firebase';
-import { Estudiante } from "../objetos/Estudiante";
-import { updateEmail,updateProfile,sendPasswordResetEmail } from "firebase/auth";
 
-// export async function actualizarEmail(newEmail) {
-//   try {
-//     verifyBeforeUpdateEmail(auth.currentUser, newEmail).then(() => {
-//       // Email updated!
-//       // ...
-//       alert("Se te ha enviado un enlace al nuevo email para verificarlo.")
-//     }).catch((error) => {
-//       // An error occurred
-//       // ...
-//       console.error(error);
-//     });
-    
-//   } catch (error) {
-//     console.error(error);
-//   }
-// }
-export async function cambiarContrasena(email){
-  sendPasswordResetEmail(auth,email)
-  .then(() => {
-    alert("Se te ha enviado un mensaje al email indicado. \nSiga las instrucciones para obtener una nueva contraseña.");
-  })
-  .catch((error) => {
-    const errorCode = error.code;
-    const errorMessage = error.message;
+export async function registerWithCredentialsStudent(email, password, name, number) {
+  try {
+    const { user } = await createUserWithEmailAndPassword(auth, email, password);
+    const id = auth.currentUser.uid;
+    const docRef = doc(db, "estudiantes", id);
+    const data = {
+      email: email,
+      name: name,
+      number: number,
+      picture: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3gkd0qUkv1F9epnQv4Wv0cgvrsGkJ7pETR3VEbPF1ne6SGhhkYXybBInQ5CGShqmPtyE&usqp=CAU",
+      agrupaciones: []
+    };
+    await setDoc(docRef, data, { merge: true });
+    return user;
+  } catch (e) {
+    throw new Error('Error al registrar el estudiante.');
+  }
+}
+
+export async function registerWithCredentialsAdmi(email, password, name, number) {
+  try {
+    const { user } = await createUserWithEmailAndPassword(auth, email, password);
+    const id = auth.currentUser.uid;
+    const docRef = doc(db, "administradores", id);
+    const data = {
+      email: email,
+      name: name,
+      number: number,
+      picture: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3gkd0qUkv1F9epnQv4Wv0cgvrsGkJ7pETR3VEbPF1ne6SGhhkYXybBInQ5CGShqmPtyE&usqp=CAU"
+    };
+    await setDoc(docRef, data, { merge: true });
+    return user;
+  } catch (e) {
+    throw new Error('Error al registrar el administrador.');
+  }
+}
+
+// social.js
+import { GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
+import { db } from '../firebase';
+
+async function signInWithSocialProvider(provider, userType) {
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const additionalInfo = getAdditionalUserInfo(result);
+    const id = auth.currentUser.uid;
+    const collectionName = userType === 'student' ? 'estudiantes' : 'administradores';
+
+    if (additionalInfo.isNewUser) {
+      const docRef = doc(db, collectionName, id);
+      const data = {
+        email: result.user.email,
+        name: result.user.displayName,
+        number: result.user.phoneNumber,
+        picture: result.user.photoURL || 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3gkd0qUkv1F9epnQv4Wv0cgvrsGkJ7pETR3VEbPF1ne6SGhhkYXybBInQ5CGShqmPtyE&usqp=CAU',
+        agrupaciones: userType === 'student' ? [] : undefined,
+      };
+      await setDoc(docRef, data, { merge: true });
+      return true;
+    }
+    return result.user;
+  } catch (error) {
+    throw new Error('Error al iniciar sesión con redes sociales.');
+  }
+}
+
+export async function loginWithGoogleEstudiante() {
+  return signInWithSocialProvider(googleProvider, 'student');
+}
+
+export async function loginWithGoogleAdmi() {
+  return signInWithSocialProvider(googleProvider, 'admin');
+}
+
+export async function loginWithFacebookEstudiante() {
+  return signInWithSocialProvider(facebookProvider, 'student');
+}
+
+export async function loginWithFacebookAdmi() {
+  return signInWithSocialProvider(facebookProvider, 'admin');
+}
+
+// main.js
+import { loginWithCredentials } from './auth';
+import { registerWithCredentialsStudent } from './db';
+import { loginWithGoogleEstudiante } from './social';
+
+async function main() {
+  try {
+    await loginWithCredentials('user@example.com', 'password');
+    await registerWithCredentialsStudent('user@example.com', 'password', 'John Doe', '1234567890');
+    await loginWithGoogleEstudiante();
+  } catch (error) {
     console.error(error);
-    // ..
-  });
-
-}
-
-export async function loginWithCredentials(email, password){
-  try{
-      await signInWithEmailAndPassword(auth,email,password);
-      
-  }catch (e){
-      console.error(e);
-      alert("Crendenciales invalidas");
-  }
-}
-//Dados esos parametros. este metodo guardara los datos del estudiante en la base de datos de firebase
-//Y tambien en la Autentificacion de firebase
-//si el correo que se coloca ya existe, firebase lo detectara y no lo permitira
-export async function registerWithCredentialsStudent(email, password,name,number){
-  try{
-    const {user} = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const id = auth.currentUser.uid;
-    const docRef = doc(db, "estudiantes", id);
-    const data = {
-        email: email,
-        name: name,
-        number:number,
-        picture: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3gkd0qUkv1F9epnQv4Wv0cgvrsGkJ7pETR3VEbPF1ne6SGhhkYXybBInQ5CGShqmPtyE&usqp=CAU",
-        agrupaciones: [] 
-    };
-    await setDoc(docRef, data, { merge: true });
-      return user;
-  }catch (e){
-      console.error(e);
-      alert("Error! Es posible que el correo especificado, ya este en uso");
-      return null;
-  }
-}
-
-export async function registerWithCredentialsAdmi(email, password,name,number){
-  try{
-    const {user} = await createUserWithEmailAndPassword(
-      auth,
-      email,
-      password
-    );
-    const id = auth.currentUser.uid;
-    const docRef = doc(db, "administradores", id);
-    const data = {
-        email: email,
-        name: name,
-        number:number,
-        picture: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3gkd0qUkv1F9epnQv4Wv0cgvrsGkJ7pETR3VEbPF1ne6SGhhkYXybBInQ5CGShqmPtyE&usqp=CAU"
-    };
-    await setDoc(docRef, data, { merge: true });
-      return user;
-  }catch (e){
-      console.error(e);
-      alert("Error! Es posible que el correo especificado, ya este en uso");
-      return null;
-  }
-}
-
-export async function ingresarGoogleEstudiante(){
-  try{
-    const result = await signInWithPopup(auth,googleProvider);
-    const aditionalInfo = getAdditionalUserInfo(result);
-    const id = auth.currentUser.uid;
-    if(aditionalInfo.isNewUser){
-        const docRef = doc(db, "estudiantes", id);
-        const data = {
-        email:result.user.email,
-        name: result.user.displayName,
-        number: result.user.phoneNumber,
-        picture: result.user.photoURL ? result.user.photoURL : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3gkd0qUkv1F9epnQv4Wv0cgvrsGkJ7pETR3VEbPF1ne6SGhhkYXybBInQ5CGShqmPtyE&usqp=CAU',
-        agrupaciones:[]  
-        };
-        await setDoc(docRef, data, { merge: true });
-        return true;
-    }
-    return result.user;
-    
-  }catch (e){
-    console.error(e);
-  }
-}
-
-export async function ingresarGoogleAdmi(){
-  try{
-    const result = await signInWithPopup(auth,googleProvider);
-    const aditionalInfo = getAdditionalUserInfo(result);
-    const id = auth.currentUser.uid;
-    if(aditionalInfo.isNewUser){
-        const docRef = doc(db, "administradores", id);
-        const data = {
-        email:result.user.email,
-        name: result.user.displayName,
-        number: result.user.phoneNumber,
-        picture: result.user.photoURL ? result.user.photoURL : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3gkd0qUkv1F9epnQv4Wv0cgvrsGkJ7pETR3VEbPF1ne6SGhhkYXybBInQ5CGShqmPtyE&usqp=CAU',
-        };
-        await setDoc(docRef, data, { merge: true });
-        return true;
-    }
-    return result.user;
-    
-  }catch (e){
-    console.error(e);
-  }
-}
-
-export async function logOut(){
-  await signOut(auth);
-}
-export async function modificarEstudiante(user_modificado){
-  try {
-    const id = auth.currentUser.uid;
-    const docRef = doc(db, "estudiantes", id);
-
-    await setDoc(docRef, user_modificado, { merge: true });
-  } catch (error) {
-    console.error("Error updating document: ", error);
-  }
-}
-export async function modificarAdministrador(user_modificado){
-  try {
-    const id = auth.currentUser.uid;
-    const docRef = doc(db, "administradores", id);
-
-    await setDoc(docRef, user_modificado, { merge: true });
-  } catch (error) {
-    console.error("Error updating document: ", error);
-  }
-}
-// //dado un email, este metodo verificara si hay un email en la base de datos de firebase igual o no
-// export function verificarUsuario(email){
-//   //verifico si es un estudiante
-//       const Collection = collection(db,'estudiantes');
-//       const Snapshot = getDocs(Collection);
-//       const user = Snapshot.docs.map((doc) => doc.data());
-//       for (let i = 0; i < users.length; i++) {
-//         if(user[i]['id'] === email){
-//           return true;
-//         }
-//       }
-//   //verifico si es un administrador
-//     const usersCollection = collection(db,'administradores');
-//     const usersSnapshot = getDocs(usersCollection);
-//     const users = usersSnapshot.docs.map((doc) => doc.data());
-//     for (let i = 0; i < users.length; i++) {
-//       if(users[i]['id'] === email){
-//         return true;
-//       }
-//     }
-//     return false;
-// }
-
-export async function ingresarFacebookEstudiante(){
-  try{
-    const result = await signInWithPopup(auth,facebookProvider);
-    const aditionalInfo = getAdditionalUserInfo(result);
-    const id = auth.currentUser.uid;
-    if(aditionalInfo.isNewUser){
-        const docRef = doc(db, "estudiantes", id);
-        const data = {
-        email:result.user.email,
-        name: result.user.displayName,
-        number: result.user.phoneNumber,
-        picture: result.user.photoURL ? result.user.photoURL : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3gkd0qUkv1F9epnQv4Wv0cgvrsGkJ7pETR3VEbPF1ne6SGhhkYXybBInQ5CGShqmPtyE&usqp=CAU',
-        agrupaciones:[]  
-        };
-        await setDoc(docRef, data, { merge: true });
-        return true;
-    }
-    return result.user;
-    
-  }catch (e){
-    console.error(e);
-    alert(e);
-  }
-}
-
-export async function ingresarFacebookAdmi(){
-  try{
-    const result = await signInWithPopup(auth,facebookProvider);
-    const aditionalInfo = getAdditionalUserInfo(result);
-    const id = auth.currentUser.uid;
-    if(aditionalInfo.isNewUser){
-        const docRef = doc(db, "administradores", id);
-        const data = {
-        email:result.user.email,
-        name: result.user.displayName,
-        number: result.user.phoneNumber,
-        picture: result.user.photoURL ? result.user.photoURL : 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ3gkd0qUkv1F9epnQv4Wv0cgvrsGkJ7pETR3VEbPF1ne6SGhhkYXybBInQ5CGShqmPtyE&usqp=CAU',
-        };
-        await setDoc(docRef, data, { merge: true });
-        return true;
-    }
-    return result.user;
-    
-  }catch (e){
-    console.error(e);
-    alert(e);
   }
 }

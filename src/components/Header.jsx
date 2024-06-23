@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Link } from 'react-router-dom';
 
 const Header = () => {
-  const { currentUser, signIn, signUp } = useAuth();
+  const { currentUser, signOut } = useAuth();
 
   if (!currentUser) {
     return (
@@ -30,7 +30,7 @@ const Header = () => {
             <Link to="/">{currentUser.email}</Link>
           </li>
           <li>
-            <Link to="/logout">Logout</Link>
+            <Link to="/logout" onClick={signOut}>Logout</Link>
           </li>
         </ul>
       </nav>
