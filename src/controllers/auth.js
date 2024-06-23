@@ -8,15 +8,14 @@ const app = initializeApp({
   // Firebase configuration
 });
 
-const auth = getAuth(app);
-const db = getFirestore(app);
-const googleProvider = new GoogleAuthProvider();
-const facebookProvider = new FacebookAuthProvider();
-
-export { auth, googleProvider, facebookProvider, db };
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+export const googleProvider = new GoogleAuthProvider();
+export const facebookProvider = new FacebookAuthProvider();
 
 // auth.js
-import { auth } from "../firebase";
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
+import { auth } from "./firebase";
 
 export async function loginWithCredentials(email, password) {
   try {
@@ -35,7 +34,9 @@ export async function cambiarContrasena(email) {
 }
 
 // db.js
-import { db } from '../firebase';
+import { createUserWithEmailAndPassword, getAdditionalUserInfo } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from './firebase';
 
 export async function registerWithCredentialsStudent(email, password, name, number) {
   try {
@@ -75,8 +76,9 @@ export async function registerWithCredentialsAdmi(email, password, name, number)
 }
 
 // social.js
-import { GoogleAuthProvider, FacebookAuthProvider } from "firebase/auth";
-import { db } from '../firebase';
+import { signInWithPopup, getAdditionalUserInfo } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, googleProvider, facebookProvider, db } from './firebase';
 
 async function signInWithSocialProvider(provider, userType) {
   try {
@@ -133,3 +135,5 @@ async function main() {
     console.error(error);
   }
 }
+
+main();
