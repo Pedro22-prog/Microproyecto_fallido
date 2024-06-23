@@ -8,10 +8,10 @@ const Login = () => {
   const [error, setError] = useState(null);
 
   const handleLogin = async (e) => {
-    e.preventDefault(); // Prevenir el comportamiento predeterminado del formulario
+    e.preventDefault(); // Prevent default form behavior
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      window.location.href = '/'; // Redirigir al usuario a la página principal
+      window.location.href = '/'; // Redirect user to the home page
     } catch (error) {
       setError(error.message);
     }

@@ -9,7 +9,6 @@ const Dashboard = () => {
   if (!currentUser) {
     history.push('/login');
   }
-
   return (
     <div>
       <h1>Dashboard</h1>
