@@ -43,11 +43,11 @@ import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCOJUxPFHwss3_ypOvUGQuVRXvu0x0lWEI",
-   authDomain: "microproyecto2-86850.firebaseapp.com",
-   projectId: "microproyecto2-86850",
-   storageBucket: "microproyecto2-86850.appspot.com",
-   messagingSenderId: "71807243021",
-   appId: "1:71807243021:web:3a62d4623bdedad3755644"
+  authDomain: "microproyecto2-86850.firebaseapp.com",
+  projectId: "microproyecto2-86850",
+  storageBucket: "microproyecto2-86850.appspot.com",
+  messagingSenderId: "71807243021",
+  appId: "1:71807243021:web:3a62d4623bdedad3755644"
 };
 
 const app = initializeApp(firebaseConfig);
