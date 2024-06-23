@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
-import firebase from 'firebase/app';
-import 'firebase/auth';
+import { auth } from './firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
 
-  const handleLogin = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault(); // Prevenir el comportamiento predeterminado del formulario
     try {
-      await firebase.auth().signInWithEmailAndPassword(email, password);
-      window.location.href = '/';
+      await signInWithEmailAndPassword(auth, email, password);
+      window.location.href = '/'; // Redirigir al usuario a la página principal
     } catch (error) {
       setError(error.message);
     }
@@ -19,7 +20,7 @@ const Login = () => {
   return (
     <div>
       <h2>Login</h2>
-      <form>
+      <form onSubmit={handleLogin}>
         <label>
           Email:
           <input
@@ -38,7 +39,7 @@ const Login = () => {
           />
         </label>
         <br />
-        <button onClick={handleLogin}>Login</button>
+        <button type="submit">Login</button>
         {error && <p style={{ color: 'red' }}>{error}</p>}
       </form>
     </div>
